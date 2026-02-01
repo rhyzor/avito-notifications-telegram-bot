@@ -1,7 +1,10 @@
+import os
 import time
 import asyncio
 import requests
 from datetime import datetime
+
+from dotenv import load_dotenv
 
 from telegram import Update
 from telegram.ext import (
@@ -10,17 +13,25 @@ from telegram.ext import (
     ContextTypes,
 )
 
-# ================== НАСТРОЙКИ ==================
+# ================== LOAD ENV ==================
 
-# --- TELEGRAM ---
-TELEGRAM_TOKEN = "PUT_TELEGRAM_TOKEN_HERE"
-TELEGRAM_CHAT_ID = "PUT_TELEGRAM_CHAT_ID_HERE"
+load_dotenv()
 
-# --- AVITO ---
-AVITO_CLIENT_ID = "PUT_CLIENT_ID_HERE"
-AVITO_CLIENT_SECRET = "PUT_CLIENT_SECRET_HERE"
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-CHECK_INTERVAL = 60  # секунд
+AVITO_CLIENT_ID = os.getenv("AVITO_CLIENT_ID")
+AVITO_CLIENT_SECRET = os.getenv("AVITO_CLIENT_SECRET")
+
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 60))
+
+if not all([
+    TELEGRAM_TOKEN,
+    TELEGRAM_CHAT_ID,
+    AVITO_CLIENT_ID,
+    AVITO_CLIENT_SECRET,
+]):
+    raise RuntimeError("❌ Не все переменные окружения заданы в .env")
 
 # ================== AVITO TOKEN ==================
 
@@ -121,7 +132,6 @@ async def poll_avito(app):
                 updated_ts = chat.get("updated") or chat.get("created", 0)
                 last_ts = LAST_UPDATED.get(chat_id, 0)
 
-                # ❗ если новых сообщений нет — пропускаем
                 if updated_ts <= last_ts:
                     continue
 
