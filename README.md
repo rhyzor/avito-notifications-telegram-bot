@@ -1,5 +1,3 @@
----
-
 # 📩 Avito → Telegram Notification Bot
 
 Бот для автоматических уведомлений в **Telegram** о **новых непрочитанных сообщениях в Avito**.
