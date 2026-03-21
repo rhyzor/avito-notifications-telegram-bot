@@ -1,241 +1,217 @@
+
 # 📩 Avito → Telegram Notification Bot
 
-Бот для автоматических уведомлений в **Telegram** о **новых непрочитанных сообщениях в Avito**.
-Работает через **официальный Avito API** и **Telegram Bot API**.
-
----
+Бот для автоматических уведомлений в Telegram о новых непрочитанных сообщениях в Avito.  
+Работает через официальный Avito Messenger API и Telegram Bot API.
 
 ## 🚀 Возможности
 
-* 📬 Уведомляет о **каждом новом сообщении в Avito**
-* 🔄 Периодически опрашивает Avito API
-* 🤖 Отправляет уведомления в Telegram
-* 🔐 Все секреты хранятся в `.env` (безопасно)
-* ♻️ Автоматически обновляет OAuth-токен Avito
-* 🧠 Не шлёт дубликаты сообщений
-* 💻 Работает на Windows / Linux / VPS
+- 📬 Уведомляет о каждом новом сообщении в Avito
+- 🔄 Периодически опрашивает Avito API
+- 🤖 Отправляет уведомления в Telegram
+- 🔐 Все секреты хранятся в `.env`
+- ♻️ Автоматически обновляет OAuth-токен Avito
+- 🧠 Не отправляет дубликаты сообщений
+- 💻 Работает на Windows, Linux, VPS
 
----
-
-## 🧩 Используемые технологии
-
-* Python 3.9+
-* `python-telegram-bot` (async, v20+)
-* `requests`
-* `python-dotenv`
-* Avito Messenger API
-
----
-
-## 📂 Структура проекта
-
-```text
-avito_bot/
-├─ bot.py               # основной код бота
-├─ .env                 # секреты (НЕ коммитить)
-├─ requirements.txt     # зависимости
-├─ README.md            # документация
-└─ venv/                # виртуальное окружение
-```
-
----
-
-## ⚙️ Требования
-
-* Python **3.9 или выше** (рекомендуется 3.10 / 3.11)
-* Аккаунт Avito с доступом к API
-* Созданный Telegram-бот (@BotFather)
-
-Проверка Python:
+## ⚡ Быстрый старт
 
 ```bash
-python --version
+git clone https://github.com/yourusername/avito-telegram-bot.git
+cd avito-telegram-bot
+python -m venv venv
+source venv/bin/activate  # или venv\Scripts\activate на Windows
+pip install -r requirements.txt
+cp .env.example .env  # заполните своими данными
+python bot.py
 ```
 
----
+## 🔧 Требования
+
+- Python 3.9+ (рекомендуется 3.10 или 3.11)
+- Аккаунт Avito с доступом к [API](https://api.avito.ru/)
+- Telegram-бот, созданный через [@BotFather](https://t.me/BotFather)
 
 ## 📦 Установка
 
-### 1️⃣ Клонируй или создай папку проекта
+### 1️⃣ Клонируйте или создайте папку проекта
 
 ```bash
 mkdir avito_bot
 cd avito_bot
 ```
 
----
-
-### 2️⃣ Создай виртуальное окружение
+### 2️⃣ Создайте виртуальное окружение
 
 ```bash
 python -m venv venv
 ```
 
-Активация:
+**Активация:**
 
-**Windows**
-
-```bat
+Windows:
+```bash
 venv\Scripts\activate
 ```
 
-**Linux / macOS**
-
+Linux / macOS:
 ```bash
 source venv/bin/activate
 ```
 
----
-
-### 3️⃣ Установи зависимости
+### 3️⃣ Установите зависимости
 
 ```bash
 pip install -r requirements.txt
 ```
 
-**Содержимое `requirements.txt`:**
-
-```txt
+**Содержимое requirements.txt:**
+```
 requests>=2.31
 python-telegram-bot>=20,<21
 python-dotenv>=1.0
 ```
 
----
-
 ## 🔐 Настройка `.env`
 
-Создай файл **`.env`** в корне проекта:
+Создайте файл `.env` в корне проекта:
 
 ```env
+# Telegram
 TELEGRAM_TOKEN=123456789:AAAbbbCCCdddEEE
 TELEGRAM_CHAT_ID=123456789
 
-AVITO_CLIENT_ID=your_avito_client_id
-AVITO_CLIENT_SECRET=your_avito_client_secret
+# Avito API
+AVITO_CLIENT_ID=your_client_id
+AVITO_CLIENT_SECRET=your_client_secret
 
+# Интервал проверки (секунды)
 CHECK_INTERVAL=60
 ```
 
-### 📌 Пояснения:
+### Как получить данные:
 
-* `TELEGRAM_TOKEN` — токен бота от @BotFather
-* `TELEGRAM_CHAT_ID` — ID чата или пользователя
-* `AVITO_CLIENT_ID / SECRET` — из Avito API
-* `CHECK_INTERVAL` — интервал проверки Avito (в секундах)
+- **TELEGRAM_TOKEN**: создайте бота через [@BotFather](https://t.me/BotFather)
+- **TELEGRAM_CHAT_ID**: отправьте любое сообщение боту, затем перейдите по ссылке:  
+  `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` — найдите `chat.id`
+- **AVITO_CLIENT_ID / SECRET**:  
+  1. Перейдите в [Avito API](https://api.avito.ru/)
+  2. Создайте приложение
+  3. В разделе "OAuth" получите Client ID и Client Secret
 
-⚠️ **Важно**
-
-* Без кавычек
-* `.env` **не выкладывать в git**
-* Chat ID — числом
-
----
-
-## ▶️ Запуск бота
+## ▶️ Запуск
 
 ```bash
 python bot.py
 ```
 
-При успешном запуске ты увидишь:
-
-```text
-👤 Avito user_id: XXXXX
-🤖 Telegram bot: your_bot_name
+При успешном запуске увидите:
+```
+👤 Avito user_id: 123456789
+🤖 Telegram bot: YourBotName
 ```
 
-В Telegram:
+В Telegram бот ответит на команду `/start`.
 
-```
-/start
-```
-
----
-
-## 🧠 Как работает бот
+## 🧠 Как это работает
 
 1. Получает OAuth-токен Avito
 2. Узнаёт `user_id` аккаунта
 3. Каждые `CHECK_INTERVAL` секунд:
-
-   * запрашивает непрочитанные чаты
-   * фильтрует системные диалоги
-   * проверяет, есть ли новые сообщения
+   - запрашивает непрочитанные чаты
+   - фильтрует системные диалоги
+   - проверяет наличие новых сообщений
 4. Отправляет уведомление в Telegram
-5. Запоминает последний timestamp, чтобы избежать дублей
-
----
+5. Запоминает последний timestamp для предотвращения дубликатов
 
 ## 🛡 Безопасность
 
-* ❌ Токены не хранятся в коде
-* ✅ `.env` можно менять без перезапуска кода
-* 🔐 Готово для деплоя на сервер
+- Все токены хранятся в `.env`, который **не попадает в репозиторий**
+- Рекомендуется добавить `.env` в `.gitignore`
+- При необходимости можно обновлять `.env` без перезапуска кода
 
-Рекомендуется добавить `.gitignore`:
+## 📁 `.gitignore` (рекомендуемый)
 
-```gitignore
+```
 .env
 venv/
 __pycache__/
+*.pyc
+.DS_Store
 ```
-
----
 
 ## 🖥 Автозапуск
 
-Бот можно запускать:
+### Windows (Планировщик заданий)
+Создайте задачу для запуска `python bot.py` при старте системы.
 
-* 🪟 через **Планировщик заданий Windows**
-* 🐧 через **systemd** (Linux / VPS)
-* 🐳 в Docker (при необходимости)
+### Linux / VPS (systemd)
+Создайте файл `/etc/systemd/system/avito-bot.service`:
+```ini
+[Unit]
+Description=Avito Telegram Bot
+After=network.target
 
-(настройки описываются отдельно)
+[Service]
+User=youruser
+WorkingDirectory=/path/to/avito_bot
+ExecStart=/path/to/venv/bin/python bot.py
+Restart=always
 
----
+[Install]
+WantedBy=multi-user.target
+```
+
+Затем выполните:
+```bash
+sudo systemctl enable avito-bot
+sudo systemctl start avito-bot
+```
 
 ## 🧪 Отладка и логи
 
-Все ошибки выводятся в stdout:
-
-```text
-❌ Avito error: 401 ...
+При ошибках в консоль выводится:
+```
+❌ Avito error: 401 Unauthorized
 🔥 Ошибка: ...
 ```
 
-При желании можно:
-
-* добавить логирование в файл
-* отправлять алерт в Telegram при падении
-* добавить retry + backoff
-
----
+Для production рекомендуется настроить:
+- Логирование в файл
+- Уведомления об ошибках в Telegram
+- Retry-механизм с backoff
 
 ## 📌 Ограничения
 
-* Используется polling (не webhook)
-* Зависит от лимитов Avito API
-* Работает только с личными чатами (`u2i`)
-
----
+- Используется polling (не webhook)
+- Работает только с личными чатами (`u2i`)
+- Зависит от лимитов Avito API
 
 ## 🧩 Идеи для улучшения
 
-* 📄 Логи в файл
-* 🚨 Уведомление при ошибках
-* 🔁 Retry при 5xx
-* 📊 Статистика сообщений
-* 🧪 Unit-тесты
-* 🐳 Docker
+- [ ] Логирование в файл
+- [ ] Уведомления при ошибках
+- [ ] Retry при 5xx ошибках
+- [ ] Статистика сообщений
+- [ ] Unit-тесты
+- [ ] Docker-образ
 
----
+## 🤝 Вклад в проект
+
+PR и issues приветствуются.  
+Перед отправкой изменений:
+1. Убедитесь, что код работает с вашими данными
+2. Проверьте на наличие лишних отладочных выводов
+3. Обновите README при необходимости
+
+## 📄 Лицензия
+
+MIT License. Используйте свободно, но с указанием авторства.
 
 ## 📬 Поддержка
 
-Если бот не запускается:
-
-1. Проверь `.env`
-2. Проверь версии библиотек
-3. Убедись, что Avito API доступен
-4. Посмотри вывод в консоли
+Если возникли проблемы:
+1. Проверьте корректность `.env`
+2. Убедитесь, что Avito API доступен
+3. Проверьте версии библиотек: `pip list`
+4. Посмотрите вывод в консоли
