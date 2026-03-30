@@ -1,60 +1,57 @@
-# 📩 Avito → Telegram Notification Bot
+# 📩 Avito → Ubuntu Notification Bot
 
-Бот для автоматических уведомлений в Telegram о новых непрочитанных сообщениях в Avito.  
-Работает через официальный Avito Messenger API и Telegram Bot API.
+Скрипт для уведомлений о новых непрочитанных сообщениях в Avito на Ubuntu:
+- выводит сообщение в консоль,
+- показывает desktop-уведомление через `notify-send`.
+
+Работает через официальный Avito Messenger API.
 
 ## 🚀 Возможности
 
 - 📬 Уведомляет о каждом новом сообщении в Avito
 - 🔄 Периодически опрашивает Avito API
-- 🤖 Отправляет уведомления в Telegram
+- 🖥️ Показывает Ubuntu desktop notification (`notify-send`)
+- 🧾 Дублирует уведомления в консоль
 - 🔐 Все секреты хранятся в `.env`
 - ♻️ Автоматически обновляет OAuth-токен Avito
 - 🧠 Не отправляет дубликаты сообщений
 - 🧹 Ограничивает историю чатов в памяти
-- 📊 Команда `/status` показывает состояние бота
 
 ## ⚙️ Установка
 
-1. Клонируйте репозиторий:
+1. Установите системную зависимость для desktop-уведомлений:
 
-   ```bash
-   git clone <repo-url>
-   cd avito-notifications-telegram-bot
-   ```
+```bash
+sudo apt update
+sudo apt install -y libnotify-bin
+```
 
-2. Создайте и активируйте виртуальное окружение:
+2. Подготовьте окружение Python:
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-3. Установите зависимости:
+3. Создайте `.env`:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+cp .env.example .env
+```
 
-4. Создайте `.env` на основе примера:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-5. Заполните `.env` своими значениями.
+4. Заполните `.env` вашими данными Avito API.
 
 ## 🧩 Переменные окружения
 
 | Переменная | Обязательна | Описание |
 |---|---|---|
-| `TELEGRAM_TOKEN` | ✅ | Токен Telegram-бота |
-| `TELEGRAM_CHAT_ID` | ✅ | ID чата (или пользователя), куда отправлять уведомления |
 | `AVITO_CLIENT_ID` | ✅ | Client ID из Avito API |
 | `AVITO_CLIENT_SECRET` | ✅ | Client Secret из Avito API |
-| `CHECK_INTERVAL` | ➖ | Интервал опроса Avito в секундах (по умолчанию `60`) |
+| `CHECK_INTERVAL` | ➖ | Интервал опроса в секундах (по умолчанию `60`) |
 | `HISTORY_LIMIT` | ➖ | Лимит кэша обработанных чатов (по умолчанию `3000`) |
 | `LOG_LEVEL` | ➖ | Уровень логирования (`INFO`, `DEBUG`, `WARNING` и т.д.) |
+| `ENABLE_DESKTOP_NOTIFY` | ➖ | `true/false`, включить уведомления Ubuntu (по умолчанию `true`) |
 
 ## ▶️ Запуск
 
@@ -62,7 +59,7 @@
 python bot.py
 ```
 
-## 🤖 Команды Telegram
+## 📝 Что происходит при новом сообщении
 
-- `/start` — краткая справка по работе бота
-- `/status` — текущий статус, интервал проверки и размер кэша
+1. Сообщение появляется в консоли.
+2. Показывается уведомление Ubuntu через `notify-send`.

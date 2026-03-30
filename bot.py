@@ -1,14 +1,13 @@
-import asyncio
 import logging
 import os
+import shutil
+import subprocess
 import time
 from datetime import datetime
 from typing import Any
 
 import requests
 from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # ================== LOGGING ==================
 
@@ -22,21 +21,13 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
 AVITO_CLIENT_ID = os.getenv("AVITO_CLIENT_ID")
 AVITO_CLIENT_SECRET = os.getenv("AVITO_CLIENT_SECRET")
-
 CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 60))
 HISTORY_LIMIT = int(os.getenv("HISTORY_LIMIT", 3000))
+ENABLE_DESKTOP_NOTIFY = os.getenv("ENABLE_DESKTOP_NOTIFY", "true").lower() == "true"
 
-if not all([
-    TELEGRAM_TOKEN,
-    TELEGRAM_CHAT_ID,
-    AVITO_CLIENT_ID,
-    AVITO_CLIENT_SECRET,
-]):
+if not all([AVITO_CLIENT_ID, AVITO_CLIENT_SECRET]):
     raise RuntimeError("❌ Не все переменные окружения заданы в .env")
 
 
@@ -63,8 +54,8 @@ def get_avito_token() -> str:
         },
         timeout=10,
     )
-
     response.raise_for_status()
+
     data = response.json()
     if "access_token" not in data:
         raise RuntimeError(f"Avito token error: {data}")
@@ -83,13 +74,14 @@ def avito_request(method: str, url: str, **kwargs: Any) -> requests.Response:
     headers["Authorization"] = f"Bearer {token}"
 
     response = requests.request(method, url, headers=headers, timeout=15, **kwargs)
-
     if not response.ok:
         logger.error("❌ Avito error: %s %s", response.status_code, response.text)
 
     response.raise_for_status()
     return response
 
+    response.raise_for_status()
+    return response
 
 # ================== AVITO API ==================
 
@@ -109,25 +101,6 @@ def get_unread_chats() -> list[dict[str, Any]]:
     return response.json().get("chats", [])
 
 
-# ================== TELEGRAM ==================
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "🤖 Бот запущен.\n"
-        "Уведомления будут приходить при каждом новом сообщении в Avito."
-    )
-
-
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "✅ Бот работает.\n"
-        f"Интервал проверки: {CHECK_INTERVAL} сек.\n"
-        f"История чатов в памяти: {len(LAST_UPDATED)}"
-    )
-
-
-# ================== ОСНОВНОЙ ЦИКЛ ==================
-
 LAST_UPDATED: dict[str, int] = {}
 
 
@@ -140,7 +113,6 @@ def _safe_timestamp(chat: dict[str, Any]) -> int:
 
 
 def _cleanup_history() -> None:
-    """Ограничивает размер истории, чтобы память не росла бесконечно."""
     if len(LAST_UPDATED) <= HISTORY_LIMIT:
         return
 
@@ -149,7 +121,41 @@ def _cleanup_history() -> None:
         LAST_UPDATED.pop(chat_id, None)
 
 
-async def poll_avito(app) -> None:
+def send_ubuntu_notification(title: str, message: str) -> None:
+    """Показывает локальное уведомление в Ubuntu через notify-send."""
+    if not ENABLE_DESKTOP_NOTIFY:
+        return
+
+    if shutil.which("notify-send") is None:
+        logger.warning("Команда notify-send не найдена. Установите libnotify-bin.")
+        return
+
+    try:
+        subprocess.run(["notify-send", title, message], check=False)
+    except Exception:
+        logger.exception("Не удалось отправить desktop notification")
+
+
+def notify_new_message(chat: dict[str, Any]) -> None:
+    title = chat.get("context", {}).get("value", {}).get("title", "Без названия")
+    chat_id = chat.get("id", "unknown")
+    updated_ts = _safe_timestamp(chat)
+
+    when = datetime.fromtimestamp(updated_ts).strftime("%d.%m %H:%M") if updated_ts > 0 else "unknown time"
+
+    text = f"📩 Новое сообщение в Avito | Чат: {chat_id} | Объявление: {title} | Время: {when}"
+
+    # Console message
+    logger.info(text)
+    print(text)
+
+    # Ubuntu desktop notification
+    send_ubuntu_notification("Новое сообщение Avito", f"{title}\n{when}")
+
+
+def poll_avito() -> None:
+    logger.info("Запущен цикл проверки Avito (каждые %s сек.)", CHECK_INTERVAL)
+
     while True:
         try:
             chats = get_unread_chats()
@@ -159,7 +165,6 @@ async def poll_avito(app) -> None:
                 if not isinstance(chat_id, str):
                     continue
 
-                # ❌ системные / бот-чаты
                 if chat_id.startswith(("seller_", "flower_", "sbc_")):
                     continue
 
@@ -172,58 +177,24 @@ async def poll_avito(app) -> None:
                     continue
 
                 LAST_UPDATED[chat_id] = updated_ts
-
-                title = (
-                    chat.get("context", {})
-                    .get("value", {})
-                    .get("title", "Без названия")
-                )
-
-                ts = datetime.fromtimestamp(updated_ts).strftime("%d.%m %H:%M")
-
-                await app.bot.send_message(
-                    chat_id=TELEGRAM_CHAT_ID,
-                    text=(
-                        "📩 *Новое сообщение в Avito*\n\n"
-                        f"📦 {title}\n"
-                        f"🕒 {ts}\n\n"
-                        "👉 Откройте чат в Avito"
-                    ),
-                    parse_mode="Markdown",
-                )
+                notify_new_message(chat)
 
             _cleanup_history()
 
         except Exception:
             logger.exception("🔥 Ошибка в цикле опроса")
 
-        await asyncio.sleep(CHECK_INTERVAL)
+        time.sleep(CHECK_INTERVAL)
 
 
-# ================== ЗАПУСК ==================
-
-async def main() -> None:
+def main() -> None:
     global AVITO_USER_ID
 
     AVITO_USER_ID = get_avito_user_id()
     logger.info("👤 Avito user_id: %s", AVITO_USER_ID)
 
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-
-    await app.initialize()
-    await app.start()
-
-    me = await app.bot.get_me()
-    logger.info("🤖 Telegram bot: %s", me.username)
-
-    try:
-        await poll_avito(app)
-    finally:
-        await app.stop()
-        await app.shutdown()
+    poll_avito()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
