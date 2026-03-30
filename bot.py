@@ -30,6 +30,7 @@ ENABLE_DESKTOP_NOTIFY = os.getenv("ENABLE_DESKTOP_NOTIFY", "true").lower() == "t
 if not all([AVITO_CLIENT_ID, AVITO_CLIENT_SECRET]):
     raise RuntimeError("❌ Не все переменные окружения заданы в .env")
 
+
 # ================== AVITO TOKEN ==================
 
 _avito_token: str | None = None
@@ -79,6 +80,8 @@ def avito_request(method: str, url: str, **kwargs: Any) -> requests.Response:
     response.raise_for_status()
     return response
 
+    response.raise_for_status()
+    return response
 
 # ================== AVITO API ==================
 
