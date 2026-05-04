@@ -66,3 +66,11 @@ python bot.py
 
 1. Сообщение появляется в консоли.
 2. Показывается уведомление Ubuntu через `notify-send`.
+
+---
+
+## ⭐ Поддержка / Связь
+
+GitHub: [@rhyzor](https://github.com/rhyzor)
+
+Telegram: [@rhyzor1](https://t.me/rhyzor1)
